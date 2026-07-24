@@ -328,7 +328,7 @@
       <img src="assets/thrive-logo.png" alt="Thrive" style="width:46px;height:46px;object-fit:contain;flex:0 0 auto;">
       <div style="line-height:1;">
         <div style="font-size:15px;font-weight:800;letter-spacing:.05em;color:#34512C;">THRIVE</div>
-        <div style="font-size:8.5px;font-weight:700;letter-spacing:.15em;color:#8FAE48;margin-top:3px;">HYBRID ACADEMY</div>
+        <div style="font-size:8.5px;font-weight:700;letter-spacing:.15em;color:#8FAE48;margin-top:3px;">ACADEMY</div>
       </div>
     </div>
 
@@ -684,7 +684,7 @@
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap;">
       <div>
         <div style="font-size:11px;font-weight:800;letter-spacing:.13em;color:#45852B;">EXECUTIVE DASHBOARD</div>
-        <h1 style="margin:9px 0 6px;font-size:29px;font-weight:800;color:#1E2A16;letter-spacing:-.01em;">Building Thrive Hybrid Academy</h1>
+        <h1 style="margin:9px 0 6px;font-size:29px;font-weight:800;color:#1E2A16;letter-spacing:-.01em;">Building Thrive Academy</h1>
         <div style="font-size:13.5px;color:#79866C;max-width:560px;line-height:1.55;">One operational command center for launching, operating, accrediting, and scaling the academy — from curriculum to Cognia to TEFA.</div>
       </div>
       <div class="hdr-actions" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -1702,7 +1702,7 @@ class Component extends DCLogic {
   constructor(props){
     super(props);
     this.KEY='thrive_webapp_v2';
-    this.BUILD='v89 · Jul 17';
+    this.BUILD='v90 · Jul 17';
     // ---- Shared AI server (Cloudflare Worker middleman) ----
     // When AI_WORKER is set, ALL devices (incl. the team) use the AI through
     // this server — the real API key lives ONLY on the server, never shared.
@@ -2187,9 +2187,9 @@ class Component extends DCLogic {
       h+='</div>'; });
     return h;
   }
-  exportMilestone(ph,di){ const P=this.PHASES.find(x=>x.key===ph); const del=(this.state.board[ph]||[])[di]; if(!del) return; const html='<p style="color:#666;">'+this._docEsc2(P?P.label:'')+' · Thrive Hybrid Academy · '+new Date().toLocaleDateString()+'</p>'+this._rptMilestoneHtml(del,di,(P?P.color:'#2E8B57')); this.docSendToGoogle('Milestone '+(di+1)+((del.title&&del.title.trim())?(' — '+del.title):''), html); }
+  exportMilestone(ph,di){ const P=this.PHASES.find(x=>x.key===ph); const del=(this.state.board[ph]||[])[di]; if(!del) return; const html='<p style="color:#666;">'+this._docEsc2(P?P.label:'')+' · Thrive Academy · '+new Date().toLocaleDateString()+'</p>'+this._rptMilestoneHtml(del,di,(P?P.color:'#2E8B57')); this.docSendToGoogle('Milestone '+(di+1)+((del.title&&del.title.trim())?(' — '+del.title):''), html); }
   exportPhase(ph){ const P=this.PHASES.find(x=>x.key===ph); const dels=this.state.board[ph]||[]; let tt=0,dd=0; dels.forEach(del=>{ tt+=(del.tasks||[]).length; dd+=(del.tasks||[]).filter(t=>t.done).length; }); const pct=tt?Math.round(dd/tt*100):0;
-    let html='<p style="color:#666;">Thrive Hybrid Academy · Progress report · '+new Date().toLocaleDateString()+'</p><p style="font-size:13pt;"><b>Overall: '+pct+'% complete</b> ('+dd+' of '+tt+' tasks across '+dels.length+' milestones)</p>';
+    let html='<p style="color:#666;">Thrive Academy · Progress report · '+new Date().toLocaleDateString()+'</p><p style="font-size:13pt;"><b>Overall: '+pct+'% complete</b> ('+dd+' of '+tt+' tasks across '+dels.length+' milestones)</p>';
     html+=this._rptCardsHtml(ph);
     dels.forEach((del,di)=>{ html+=this._rptMilestoneHtml(del,di,(P?P.color:'#2E8B57')); });
     this.docSendToGoogle((P?P.label:'Phase')+' — Progress Report', html); }
@@ -2198,7 +2198,7 @@ class Component extends DCLogic {
     let tt=0,dd=0,msN=0; this.PHASES.forEach(p=>{ const a=this.state.board[p.key]||[]; msN+=a.length; a.forEach(del=>{ tt+=(del.tasks||[]).length; dd+=(del.tasks||[]).filter(t=>t.done).length; }); });
     const pct=tt?Math.round(dd/tt*100):0;
     const listSec=(title,items)=>{ if(!items||!items.length) return ''; return '<h2 style="color:#5B6B4E;border-bottom:2px solid #CBD8BC;padding-bottom:4px;">'+esc(title)+'</h2><ul>'+items.map(x=>'<li>'+x+'</li>').join('')+'</ul>'; };
-    let html='<p style="color:#666;">Thrive Hybrid Academy · Full report · '+new Date().toLocaleDateString()+'</p><p style="font-size:13pt;"><b>Overall: '+pct+'% complete</b> ('+dd+' of '+tt+' tasks · '+msN+' milestones · '+this.PHASES.length+' phases)</p>';
+    let html='<p style="color:#666;">Thrive Academy · Full report · '+new Date().toLocaleDateString()+'</p><p style="font-size:13pt;"><b>Overall: '+pct+'% complete</b> ('+dd+' of '+tt+' tasks · '+msN+' milestones · '+this.PHASES.length+' phases)</p>';
     html+=this._rptCardsHtml('dash'); html+=this._rptCardsHtml('overview');
     if(!team){
       html+=listSec('Executive Summary', (meta.exec||[]).filter(x=>x&&String(x).trim()).map(x=>esc(x)));
@@ -2210,7 +2210,7 @@ class Component extends DCLogic {
       if(bd.length){ html+='<h2 style="color:#5B6B4E;border-bottom:2px solid #CBD8BC;padding-bottom:4px;">Brain Dump</h2>'; bd.forEach(e=>{ let d=''; try{ d=e.ts?new Date(e.ts).toLocaleString():''; }catch(_){} html+='<div style="margin:6px 0;padding:6px 10px;background:#FBFCFA;border:1px solid #EEF2EA;border-radius:6px;">'+(d?'<div style="font-size:9pt;color:#9AA68C;margin-bottom:3px;">'+esc(d)+'</div>':'')+'<div>'+esc(e.text).replace(/\n/g,'<br>')+'</div></div>'; }); }
     }
     this.PHASES.forEach(p=>{ const dels=this.state.board[p.key]||[]; html+='<h1 style="color:'+p.color+';margin-top:26px;border-bottom:3px solid '+p.color+';padding-bottom:5px;">'+esc(p.label)+'</h1>'; html+=this._rptCardsHtml(p.key); dels.forEach((del,di)=>{ html+=this._rptMilestoneHtml(del,di,p.color); }); });
-    this.docSendToGoogle('Thrive Hybrid Academy — Full Report', html); }
+    this.docSendToGoogle('Thrive Academy — Full Report', html); }
 
   // ---- Version history: synced across devices via Firebase (merge by snapshot ts) ----
   histUrl(){ return this.SYNC_URL ? (this.SYNC_URL.replace(/\/+$/,'')+'/thrivehist/'+this.CTOKEN+'.json') : ''; }
@@ -2495,9 +2495,9 @@ class Component extends DCLogic {
   aiIsBillingError(status,msg){ const m=String(msg||'').toLowerCase(); if(status===402) return true; return /credit|billing|balance is too low|too low|spend limit|usage limit|monthly limit|quota|insufficient|payment required|out of funds|budget/.test(m); }
   _stripHtml(h){ return String(h==null?'':h).replace(/<\/(p|div|h[1-6]|li|tr)>/gi,'\n').replace(/<br\s*\/?>/gi,'\n').replace(/<td[^>]*>/gi,'\t').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\n{3,}/g,'\n\n').trim(); }
   aiContext(ph,di,ti){ const P=this.PHASES.find(x=>x.key===ph); const del=(this.state.board[ph]||[])[di];
-    if(ti==='m'){ if(!del) return ''; const L=[]; L.push('PROJECT: Thrive Hybrid Academy — a hybrid/virtual school launch & accreditation roadmap.'); L.push('PHASE: '+(P?P.label:ph)); L.push('MILESTONE: '+del.title); if(del.desc&&del.desc.trim()) L.push('MILESTONE GOAL: '+del.desc.trim()); const mn=this._stripHtml(del.notes); if(mn) L.push('MILESTONE NOTES:\n'+mn); if(del.tasks&&del.tasks.length) L.push('TASKS:\n'+del.tasks.map(t=>'- ['+(t.done?'x':' ')+'] '+t.label+(t.notes?(' — '+this._stripHtml(t.notes)):'')).join('\n')); const links=(del.delLinks||[]).filter(l=>l.url&&l.url.trim()); if(links.length) L.push('LINKS:\n'+links.map(l=>'- '+(l.label||'')+': '+l.url).join('\n')); return L.join('\n'); }
+    if(ti==='m'){ if(!del) return ''; const L=[]; L.push('PROJECT: Thrive Academy — a hybrid/virtual school launch & accreditation roadmap.'); L.push('PHASE: '+(P?P.label:ph)); L.push('MILESTONE: '+del.title); if(del.desc&&del.desc.trim()) L.push('MILESTONE GOAL: '+del.desc.trim()); const mn=this._stripHtml(del.notes); if(mn) L.push('MILESTONE NOTES:\n'+mn); if(del.tasks&&del.tasks.length) L.push('TASKS:\n'+del.tasks.map(t=>'- ['+(t.done?'x':' ')+'] '+t.label+(t.notes?(' — '+this._stripHtml(t.notes)):'')).join('\n')); const links=(del.delLinks||[]).filter(l=>l.url&&l.url.trim()); if(links.length) L.push('LINKS:\n'+links.map(l=>'- '+(l.label||'')+': '+l.url).join('\n')); return L.join('\n'); }
     const t=del&&del.tasks[ti]; if(!t) return '';
-    const L=[]; L.push('PROJECT: Thrive Hybrid Academy — a hybrid/virtual school launch & accreditation roadmap.');
+    const L=[]; L.push('PROJECT: Thrive Academy — a hybrid/virtual school launch & accreditation roadmap.');
     L.push('PHASE: '+(P?P.label:ph)); L.push('MILESTONE: '+(del?del.title:'')); L.push('TASK: '+t.label+(t.done?' (marked complete)':''));
     if(t.dod&&t.dod.trim()) L.push('DEFINITION OF DONE: '+t.dod.trim());
     const notes=this._stripHtml(t.notes); const doc=this._stripHtml(t.doc);
@@ -2654,9 +2654,9 @@ class Component extends DCLogic {
     const mem=(this.state.aiChatMem||'').trim();
     let sys;
     if(team){
-      sys='You are the Thrive Assistant, a friendly, sharp helper built into ThriveAcademyOS — the operations command center for Thrive Hybrid Academy (a hybrid/virtual school working toward Cognia accreditation and TEFA funding). You are helping a member of Thrive\'s team. Help them understand the roadmap, summarize phases and milestones, and draft updates. Be concise and practical. Here is the live progress for context:\n\n'+this.aiProjectSnapshot();
+      sys='You are the Thrive Assistant, a friendly, sharp helper built into ThriveAcademyOS — the operations command center for Thrive Academy (a hybrid/virtual school working toward Cognia accreditation and TEFA funding). You are helping a member of Thrive\'s team. Help them understand the roadmap, summarize phases and milestones, and draft updates. Be concise and practical. Here is the live progress for context:\n\n'+this.aiProjectSnapshot();
     } else {
-      sys='You are Dana\'s friendly, sharp assistant built into ThriveAcademyOS — the operations command center she uses to launch and run Thrive Hybrid Academy (a hybrid/virtual school working toward Cognia accreditation and TEFA funding). Help her think, plan, draft, and problem-solve. Be concise and practical. Here is her live progress for context:\n\n'+this.aiProjectSnapshot();
+      sys='You are Dana\'s friendly, sharp assistant built into ThriveAcademyOS — the operations command center she uses to launch and run Thrive Academy (a hybrid/virtual school working toward Cognia accreditation and TEFA funding). Help her think, plan, draft, and problem-solve. Be concise and practical. Here is her live progress for context:\n\n'+this.aiProjectSnapshot();
     }
     if(mem) sys+='\n\nWhat you remember from past conversations (use it naturally to be more helpful — do not recite it back verbatim):\n'+mem;
     sys+='\n\nMEMORY: When you learn a durable fact, preference, or decision that would help you assist better in future chats, append it at the very end of your reply on its own line in EXACTLY this format: [[REMEMBER: the concise fact]]. You may add more than one. These lines are removed before the user sees the reply, so never reference them in the visible text. Only record things worth remembering long-term — skip trivial or one-off details.';
@@ -2961,7 +2961,7 @@ class Component extends DCLogic {
     for(let i=wp.del.tasks.length-1;i>=0;i--){ if(wp.del.tasks[i].done){ lastDone=wp.del.tasks[i].label; break; } }
     const flPct=wp.tt?Math.round(wp.dd/wp.tt*100):0;
     const lp={
-      lastActive:'Today \u00b7 '+clockTime, project:'Thrive Hybrid Academy',
+      lastActive:'Today \u00b7 '+clockTime, project:'Thrive Academy',
       phase:wp.p.label, milestone:'Milestone '+(wp.di+1)+' \u00b7 '+wp.del.title,
       task:(wp.del.tasks[wp.ti]||{}).label||'\u2014', lastDone,
       nextStep:(wp.del.tasks[wp.ti]||{}).label||'\u2014',
