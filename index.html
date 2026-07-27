@@ -569,8 +569,17 @@
           <sc-if value="{{ d.menuOpen }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 16px;background:#FBFCFA;border-bottom:1px solid #EEF2EA;">
               <button class="pbtn" onClick="{{ d.onCopyLink }}" title="Copy a link to this milestone to paste in an email" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#3F6193;background:#EEF3FA;border:1px solid #CBD8E8;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">🔗 Copy link</button>
+              <sc-if value="{{ d.rec.show }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ d.rec.onRec }}" title="Record a private voice memo (only you can see it; it syncs to your devices)" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:{{ d.rec.recColor }};background:{{ d.rec.recBg }};border:1px solid {{ d.rec.recBorder }};border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">{{ d.rec.recLabel }}</button></sc-if>
               <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ d.onDupMs }}" title="Duplicate this milestone" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #D7E2CE;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">⧉ Duplicate</button><button class="pbtn" onClick="{{ d.onMoveMs }}" title="Move this milestone to another phase" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #D7E2CE;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">⇄ Move to phase</button><button class="pbtn" onClick="{{ d.onExportMs }}" title="Export this milestone to a Google Doc" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#3F6193;background:#fff;border:1px solid #D7E2CE;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">⇪ Export to Doc</button></sc-if>
               <sc-if value="{{ d.canDelete }}" hint-placeholder-val="{{ true }}"><button class="del" onClick="{{ d.onDelete }}" title="Delete this milestone" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#B4452E;background:#FCF1F0;border:1px solid #F3DAD8;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">✕ Delete</button></sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ d.rec.hasMemos }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:9px 16px;background:#FCFDFB;border-bottom:1px solid #EEF2EA;">
+              <span style="font-size:10px;font-weight:800;letter-spacing:.07em;color:#A6B098;flex:0 0 auto;">🎙 YOUR VOICE MEMOS</span>
+              <sc-for list="{{ d.rec.memos }}" as="r" hint-placeholder-count="0">
+                <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #E8EDE4;border-radius:9px;padding:4px 7px;"><audio controls="controls" preload="none" src="{{ r.src }}" style="height:32px;max-width:220px;"></audio><button class="del" onClick="{{ r.onDelete }}" title="Delete this memo" style="width:18px;height:18px;border-radius:5px;border:none;background:transparent;color:#C2CCB6;cursor:pointer;font-size:11px;flex:0 0 auto;">✕</button></span>
+              </sc-for>
             </div>
           </sc-if>
           <sc-if value="{{ d.collapsed }}" hint-placeholder-val="{{ false }}">
@@ -597,9 +606,17 @@
                   <sc-if value="{{ t.menuOpen }}" hint-placeholder-val="{{ false }}">
                   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;margin-left:30px;">
                     <button class="pbtn" onClick="{{ t.onCopyLink }}" title="Copy a link to this task to paste in an email" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#3F6193;background:#EEF3FA;border:1px solid #CBD8E8;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">🔗 Copy link</button>
+                    <sc-if value="{{ t.rec.show }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ t.rec.onRec }}" title="Record a private voice memo (only you can see it; it syncs to your devices)" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:{{ t.rec.recColor }};background:{{ t.rec.recBg }};border:1px solid {{ t.rec.recBorder }};border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">{{ t.rec.recLabel }}</button></sc-if>
                     <button class="pbtn" onClick="{{ t.onDup }}" title="Duplicate this task" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #E2E8DE;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">⧉ Duplicate</button>
                     <button class="pbtn" onClick="{{ t.onMove }}" title="Move this task to another milestone or phase" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #E2E8DE;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">⇄ Move</button>
                     <sc-if value="{{ t.canDelete }}" hint-placeholder-val="{{ true }}"><button class="del" onClick="{{ t.onDelete }}" title="Delete this task" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#B4452E;background:#FCF1F0;border:1px solid #F3DAD8;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">✕ Delete</button></sc-if>
+                  </div>
+                  </sc-if>
+                  <sc-if value="{{ t.rec.hasMemos }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;margin-left:30px;">
+                    <sc-for list="{{ t.rec.memos }}" as="r" hint-placeholder-count="0">
+                      <span style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #E8EDE4;border-radius:8px;padding:3px 6px;"><audio controls="controls" preload="none" src="{{ r.src }}" style="height:30px;max-width:190px;"></audio><button class="del" onClick="{{ r.onDelete }}" title="Delete this memo" style="width:16px;height:16px;border-radius:4px;border:none;background:transparent;color:#C2CCB6;cursor:pointer;font-size:10px;flex:0 0 auto;">✕</button></span>
+                    </sc-for>
                   </div>
                   </sc-if>
                   <sc-if value="{{ t.texp }}" hint-placeholder-val="{{ true }}">
@@ -1786,7 +1803,8 @@ class Component extends DCLogic {
     this._phaseTints=['#E5F2EB','#DDF1EF','#EEF4DC','#E5F0E0','#E1F4EA','#E7EDF6','#EFE7F7','#F6EBE1','#E5F2EB','#DDF1EF'];
     // Themed color swatches (accent + matching tint) for custom cards, phases & milestones
     this.CARD_SWATCHES=[{c:'#2E8B57',t:'#E5F2EB'},{c:'#0E8F86',t:'#DDF1EF'},{c:'#6F9E1E',t:'#EEF4DC'},{c:'#1FA15B',t:'#E1F4EA'},{c:'#3F6193',t:'#E7EDF6'},{c:'#8A5CC0',t:'#EFE7F7'},{c:'#C0692E',t:'#F6EBE1'},{c:'#C0392E',t:'#F7E7E5'},{c:'#B08900',t:'#F7F1DC'},{c:'#5B6B4E',t:'#EEF1EA'}];
-    this.state={ view:'dashboard', active:'p1', search:'', board:this.seedBoard(), now:new Date(), wsOpen:false, wsPath:null, toast:'', privateMode:false, history:[], navOpen:false, noteBig:false, noteExp:{}, subExp:{}, msCol:{}, taskCol:{}, tlTick:0, billModal:null, teamMode:false, comments:[], cmModal:null, replyModal:null, settingsModal:null, aiPanel:null, aiChatOpen:false, aiChatMsgs:[], aiChatInput:'', aiChatLoading:false, aiChatMem:'', aiChatMemView:false, aiChatFiles:[], teamChats:[], tcFilter:'all', histOpenDays:{}, tlNoteOpen:{}, cardColorPick:null, cardAddMenu:null, cmShowArchived:false, aiConsentDone:false, aiAgree:false, aiHideConsent:false, aiConsentName:'', msWsOpen:false, msWsPath:null, moveModal:null, rowMenu:null };
+    this.state={ view:'dashboard', active:'p1', search:'', board:this.seedBoard(), now:new Date(), wsOpen:false, wsPath:null, toast:'', privateMode:false, history:[], navOpen:false, noteBig:false, noteExp:{}, subExp:{}, msCol:{}, taskCol:{}, tlTick:0, billModal:null, teamMode:false, comments:[], cmModal:null, replyModal:null, settingsModal:null, aiPanel:null, aiChatOpen:false, aiChatMsgs:[], aiChatInput:'', aiChatLoading:false, aiChatMem:'', aiChatMemView:false, aiChatFiles:[], teamChats:[], tcFilter:'all', histOpenDays:{}, tlNoteOpen:{}, cardColorPick:null, cardAddMenu:null, cmShowArchived:false, aiConsentDone:false, aiAgree:false, aiHideConsent:false, aiConsentName:'', msWsOpen:false, msWsPath:null, moveModal:null, rowMenu:null, memoTick:0, recActive:false, recKey:null, recSecs:0 };
+    this.memos={};
   }
 
   uid(){ return 'i'+Math.random().toString(36).slice(2,9); }
@@ -2035,8 +2053,9 @@ class Component extends DCLogic {
         }
       }
     }catch(e){}
+    this.memosPull();
     this._cloudPoll=setInterval(()=>{ if(document.visibilityState==='visible' && !this._dirty) this.cloudPull(); }, 15000);
-    this._onVis=()=>{ if(document.visibilityState==='visible' && !this._dirty) this.cloudPull(); };
+    this._onVis=()=>{ if(document.visibilityState==='visible' && !this._dirty){ this.cloudPull(); this.memosPull(); } };
     document.addEventListener('visibilitychange', this._onVis);
     window.addEventListener('focus', this._onVis);
   }
@@ -2280,6 +2299,69 @@ class Component extends DCLogic {
   gotoItem(id){ const loc=this._findItem(id); if(!loc){ this.toast('That item is no longer on the board'); return false; } this.setState(s=>{ const msCol=Object.assign({},s.msCol), taskCol=Object.assign({},s.taskCol); const b=s.board||{}; const d=(b[loc.phase]||[])[loc.di]; if(d){ msCol[d.id]=false; if(loc.kind==='task'){ const t=(d.tasks||[])[loc.ti]; if(t) taskCol[t.id]=false; } } return {view:'phase', active:loc.phase, navOpen:false, msCol, taskCol}; }); this.persist({view:'phase', active:loc.phase}); setTimeout(()=>this._flashAnchor(id),90); setTimeout(()=>this._flashAnchor(id),340); return true; }
   _flashAnchor(id){ let el=null; try{ el=document.querySelector('[data-anchor="'+((window.CSS&&CSS.escape)?CSS.escape(id):id)+'"]'); }catch(e){ try{ el=document.querySelector('[data-anchor="'+id+'"]'); }catch(_){} } if(!el) return; try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ try{ el.scrollIntoView(); }catch(_){} } try{ el.classList.remove('anchor-flash'); void el.offsetWidth; el.classList.add('anchor-flash'); }catch(e){} setTimeout(()=>{ try{ el.classList.remove('anchor-flash'); }catch(_){} },2500); }
   _hashParts(){ const raw=(location.hash||'').replace(/^#/,''); const parts=raw.split(/[&/]/).filter(Boolean); let item=null, token=null; for(let i=0;i<parts.length;i++){ const p=parts[i]; const m=/^item=(.+)$/i.exec(p); if(m){ item=decodeURIComponent(m[1]); } else if(!/^team(=.*)?$/i.test(p)&&!token){ token=p.toLowerCase(); } } return {item, token}; }
+  // ===== Private voice memos — record in-browser, store in a separate cloud path so they sync across YOUR devices (not the team's board) =====
+  memosBase(){ return (this.SYNC_URL&&this.SYNC_PATH) ? (this.SYNC_URL.replace(/\/+$/,'')+'/'+this.SYNC_PATH+'_memos') : ''; }
+  async memosPull(){ if(this.state.teamMode) return; const base=this.memosBase(); if(!base) return; try{ const res=await fetch(base+'.json',{cache:'no-store'}); if(!res.ok) return; const data=await res.json(); this.memos=(data&&typeof data==='object')?data:{}; this.setState({memoTick:(this.state.memoTick||0)+1}); }catch(e){} }
+  _memoList(key){ const o=this.memos&&this.memos[key]; if(!o||typeof o!=='object') return []; return Object.keys(o).map(id=>({id, data:o[id].data, secs:o[id].secs||0, ts:o[id].ts||0})).filter(r=>r.data).sort((a,b)=>a.ts-b.ts); }
+  _fmtDur(s){ s=Math.max(0,Math.round(s||0)); const m=Math.floor(s/60), ss=s%60; return m+':'+(ss<10?'0':'')+ss; }
+  _blobToDataUrl(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error||new Error('read')); fr.readAsDataURL(blob); }); }
+  _recSupported(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+  recToggle(key){ if(this.state.recActive){ this.recStop(); } else { this.recStart(key); } }
+  recStop(){ if(this._recMR){ try{ this._recMR.stop(); }catch(e){} } }
+  async recStart(key){
+    if(this.state.teamMode) return;
+    if(!this.memosBase()){ this.toast('Cloud sync must be on to save voice memos'); return; }
+    if(!this._recSupported()){ this.toast('Recording isn’t supported in this browser — try Safari or Chrome'); return; }
+    if(this.state.recActive) return;
+    let stream; try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+    catch(e){ this.toast('Microphone is blocked — allow mic access for this site, then try again'); return; }
+    let mime=''; try{ ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].some(m=>{ if(window.MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)){ mime=m; return true; } return false; }); }catch(e){}
+    let mr; try{ mr=new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }catch(e){ try{ mr=new MediaRecorder(stream); }catch(e2){ try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){} this.toast('Recording isn’t supported in this browser'); return; } }
+    const chunks=[]; const started=Date.now();
+    mr.ondataavailable=(e)=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+    mr.onstop=async()=>{
+      try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+      if(this._recTimer){ clearInterval(this._recTimer); this._recTimer=null; }
+      const secs=Math.max(1,Math.round((Date.now()-started)/1000));
+      this._recMR=null; this.setState({recActive:false, recKey:null, recSecs:0});
+      const blob=new Blob(chunks,{type:(mr.mimeType||mime||'audio/webm')});
+      if(!blob.size){ this.toast('Nothing was recorded — try again'); return; }
+      let dataUrl; try{ dataUrl=await this._blobToDataUrl(blob); }catch(e){ this.toast('Could not save that recording'); return; }
+      if(dataUrl.length>1600000){ this.toast('That memo is too long to sync — please keep memos under ~2 minutes'); return; }
+      await this._memoSave(key, dataUrl, secs);
+    };
+    this._recMR=mr; this.setState({recActive:true, recKey:key, recSecs:0});
+    this._recTimer=setInterval(()=>{ const s=Math.round((Date.now()-started)/1000); if(s>=120){ this.recStop(); return; } if(this.state.recActive) this.setState({recSecs:s}); }, 500);
+    try{ mr.start(); }catch(e){ this.toast('Could not start recording'); this.setState({recActive:false, recKey:null}); try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){} }
+  }
+  async _memoSave(key, dataUrl, secs){
+    const base=this.memosBase(); if(!base){ this.toast('Cloud sync is off — can’t save memo'); return; }
+    const recId='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const rec={data:dataUrl, secs:secs, ts:Date.now()};
+    try{ const res=await fetch(base+'/'+encodeURIComponent(key)+'/'+recId+'.json',{method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify(rec)}); if(!res.ok) throw new Error('http'); }
+    catch(e){ this.toast('Could not save the memo to the cloud — check your connection'); return; }
+    if(!this.memos[key]) this.memos[key]={}; this.memos[key][recId]=rec;
+    this.setState({memoTick:(this.state.memoTick||0)+1});
+    this.toast('Voice memo saved ☁ — it’ll show on your other devices');
+  }
+  async _memoDelete(key, recId){
+    const base=this.memosBase(); if(base){ try{ await fetch(base+'/'+encodeURIComponent(key)+'/'+recId+'.json',{method:'DELETE'}); }catch(e){} }
+    if(this.memos[key]) delete this.memos[key][recId];
+    this.setState({memoTick:(this.state.memoTick||0)+1});
+  }
+  _recView(key){
+    const list=this._memoList(key);
+    const active=this.state.recActive && this.state.recKey===key;
+    return {
+      key:key, show:!this.state.teamMode,
+      active:active,
+      recLabel:(active?('■ Stop  '+this._fmtDur(this.state.recSecs)):'🎙 Record memo'),
+      recBg:(active?'#FBECEC':'#fff'), recColor:(active?'#B4452E':'#34672A'), recBorder:(active?'#E6C4C0':'#CBDDBC'),
+      onRec:()=>this.recToggle(key),
+      hasMemos:list.length>0,
+      memos:list.map((r,i)=>({ src:r.data, dur:this._fmtDur(r.secs), label:('Memo '+(i+1)), onDelete:()=>this._memoDelete(key, r.id) })),
+    };
+  }
   restoreVersion(i){ const h=this.state.history||[]; if(!h[i]) return; const cur={ts:Date.now(), board:JSON.parse(JSON.stringify(this.state.board))}; const history=[cur].concat(h).slice(0,40); const board=JSON.parse(JSON.stringify(h[i].board)); this._lastSnap=Date.now(); this.setState({board}); this.persist({board}); this.saveHistory(history); this.scheduleCloudPush(); this.toast('Restored — your current version was saved first'); }
   toggleHistDay(key){ this.setState(s=>({histOpenDays:Object.assign({},s.histOpenDays,{[key]:!s.histOpenDays[key]})})); }
   // Diff two board snapshots → human-readable list of what changed (for the activity log / time-log help)
@@ -2906,7 +2988,7 @@ class Component extends DCLogic {
         onDelete:()=>{ this.setState({rowMenu:null}); this.delCard(ph,di); }, canDelete:this._canDel(del.id),
         anchor:del.id, menuOpen:(this.state.rowMenu===del.id), menuBg:(this.state.rowMenu===del.id?'#EDF3E6':'#fff'),
         onToggleMenu:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleRowMenu(del.id); },
-        onCopyLink:()=>this.copyItemLink(del.id),
+        onCopyLink:()=>this.copyItemLink(del.id), rec:this._recView(del.id),
         onAddTask:()=>this.addTask(ph,di),
         onAddDelFile:(e)=>this.addDelFile(ph,di,e),
         onComment:()=>this.openComment({ph, msId:del.id, label:'Milestone '+(di+1)+' · '+del.title}),
@@ -2917,7 +2999,7 @@ class Component extends DCLogic {
           tkDrag:(ph+'|'+di+'|'+ti), onDup:()=>{ this.setState({rowMenu:null}); this.dupTask(ph,di,ti); }, onTkUp:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveTaskOrder(ph,di,ti,-1); }, onTkDown:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveTaskOrder(ph,di,ti,1); },
           anchor:t.id, menuOpen:(this.state.rowMenu===t.id), menuBg:(this.state.rowMenu===t.id?'#EDF3E6':'#fff'),
           onToggleMenu:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleRowMenu(t.id); },
-          onCopyLink:()=>this.copyItemLink(t.id),
+          onCopyLink:()=>this.copyItemLink(t.id), rec:this._recView(t.id),
           color:t.done?'#5C6B54':'#334155', strike:'none', isDone:t.done, doneTag:t.done?'✓ Done':'',
           tcol:!!this.state.taskCol[t.id], texp:!this.state.taskCol[t.id], tcolGlyph:this.state.taskCol[t.id]?'▸':'▾', tcolTitle:this.state.taskCol[t.id]?'Expand task':'Minimize task',
           rowGrid:this.state.taskCol[t.id]?'1fr':'minmax(0,1fr) minmax(0,1fr)',
