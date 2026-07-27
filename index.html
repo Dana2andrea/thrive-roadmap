@@ -165,6 +165,9 @@
     .statgrid{grid-template-columns:1fr 1fr !important;grid-auto-rows:auto !important;align-items:start !important;}
     .statgrid-hero{grid-row:auto !important;grid-column:1 / -1 !important;}
   }
+  /* Deep-link target highlight — flashes a milestone/task when opened from a shared link */
+  @keyframes anchorflash{0%{box-shadow:0 0 0 0 rgba(69,133,43,0);background:#FFF7D6;}25%{box-shadow:0 0 0 4px rgba(69,133,43,.4);background:#FFF7D6;}100%{box-shadow:0 0 0 0 rgba(69,133,43,0);background:#fff;}}
+  .anchor-flash{animation:anchorflash 2.3s ease-out;}
 </style>
 </helmet>
 
@@ -446,6 +449,7 @@
         </div>
         <button class="add" onClick="{{ onAddCard }}" style="display:flex;align-items:center;gap:7px;background:{{ phaseColor }};border:1px solid {{ phaseColor }};border-radius:10px;padding:9px 15px;font-family:inherit;font-size:13px;font-weight:700;color:#fff;cursor:pointer;">+ Add Milestone</button>
         <button class="add" onClick="{{ onExportPhase }}" title="Export this whole phase to a Google Doc" style="display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #CBD8E8;border-radius:10px;padding:9px 14px;font-family:inherit;font-size:13px;font-weight:700;color:#3F6193;cursor:pointer;">⇪ Export phase</button>
+        <button class="add" onClick="{{ onCopyPageLink }}" title="Copy a link to this page to paste in an email" style="display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #CBD8E8;border-radius:10px;padding:9px 14px;font-family:inherit;font-size:13px;font-weight:700;color:#3F6193;cursor:pointer;">🔗 Copy link</button>
         <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ onDeletePhase }}" title="Delete this phase" style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #E6D6D3;border-radius:10px;padding:9px 13px;font-family:inherit;font-size:13px;font-weight:700;color:#B4726A;cursor:pointer;">🗑 Delete phase</button></sc-if>
         <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E7ECF4;border-radius:11px;padding:9px 14px;flex:0 0 auto;">
           <span style="color:#8FAE48;font-size:13px;">◷</span>
@@ -542,7 +546,7 @@
     <div>
       <sc-for list="{{ deliverables }}" as="d" hint-placeholder-count="4">
         <sc-if value="{{ d._vis }}" hint-placeholder-val="{{ true }}">
-        <div data-ms="{{ d.msDrag }}" style="background:#fff;border:1px solid #E8EDE4;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,12,.05);margin-bottom:14px;overflow:hidden;">
+        <div data-ms="{{ d.msDrag }}" data-anchor="{{ d.anchor }}" style="background:#fff;border:1px solid #E8EDE4;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,12,.05);margin-bottom:14px;overflow:hidden;">
           <div class="mshdr" style="display:flex;align-items:flex-start;gap:12px;padding:15px 16px 15px 16px;background:{{ d.tint }};">
             <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><span data-msgrip="1" draggable="true" title="Drag to reorder this milestone" style="cursor:grab;color:#B7C4A8;font-size:16px;line-height:1;flex:0 0 auto;margin-top:14px;user-select:none;">⠿</span></sc-if>
             <div style="width:44px;height:44px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:{{ d.iconColor }};font-size:18px;border:1px solid rgba(0,0,0,.05);margin-top:2px;">{{ d.glyph }}</div>
@@ -556,12 +560,19 @@
             <div class="msact" style="text-align:right;flex:0 0 auto;display:flex;align-items:center;gap:12px;">
               <div><div style="font-size:23px;font-weight:800;color:{{ d.pctColor }};line-height:1;">{{ d.pctStr }}</div><div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:#9AA68C;margin-top:4px;text-align:center;">COMPLETE</div></div>
               <sc-if value="{{ teamMode }}" hint-placeholder-val="{{ false }}"><button class="pbtn" onClick="{{ d.onComment }}" title="Comment on this milestone" style="display:inline-flex;align-items:center;gap:4px;height:30px;border-radius:8px;border:1px solid #CBD8E8;background:#EEF3FA;color:#3F6193;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 11px;">💬 Comment</button></sc-if>
-              <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ d.onOpenMs }}" title="Open this milestone (notes, links, files, AI, export)" style="display:inline-flex;align-items:center;gap:5px;height:30px;border-radius:8px;border:1px solid #CBDDBC;background:#EDF3E6;color:#34672A;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 11px;">Open ⤢</button><button class="pbtn" onClick="{{ d.onDupMs }}" title="Duplicate this milestone" style="display:inline-flex;align-items:center;gap:4px;height:30px;border-radius:8px;border:1px solid #D7E2CE;background:#fff;color:#5B6B4E;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 10px;">⧉ Duplicate</button><button class="pbtn" onClick="{{ d.onMoveMs }}" title="Move this milestone to another phase" style="display:inline-flex;align-items:center;gap:4px;height:30px;border-radius:8px;border:1px solid #D7E2CE;background:#fff;color:#5B6B4E;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 10px;">⇄ Move</button><button class="pbtn" onClick="{{ d.onExportMs }}" title="Export this milestone to a Google Doc" style="display:inline-flex;align-items:center;gap:4px;height:30px;border-radius:8px;border:1px solid #D7E2CE;background:#fff;color:#3F6193;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 10px;">⇪ Export</button></sc-if>
+              <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ d.onOpenMs }}" title="Open this milestone (notes, links, files, AI, export)" style="display:inline-flex;align-items:center;gap:5px;height:30px;border-radius:8px;border:1px solid #CBDDBC;background:#EDF3E6;color:#34672A;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 11px;">Open ⤢</button></sc-if>
               <button class="pbtn" onClick="{{ d.onToggleCollapse }}" title="{{ d.collapseTitle }}" style="width:30px;height:30px;border-radius:8px;border:1px solid #D7E2CE;background:#fff;color:#5B7A45;cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">{{ d.collapseGlyph }}</button>
-              <sc-if value="{{ d.canDelete }}" hint-placeholder-val="{{ true }}"><button class="del" onClick="{{ d.onDelete }}" title="Delete milestone" style="width:30px;height:30px;border-radius:8px;border:1px solid #E6D6D3;background:#fff;color:#B98A82;cursor:pointer;font-size:14px;font-family:inherit;flex:0 0 auto;">✕</button></sc-if>
+              <button class="pbtn" onClick="{{ d.onToggleMenu }}" title="More actions — copy link, duplicate, move, export, delete" style="width:30px;height:30px;border-radius:8px;border:1px solid #D7E2CE;background:{{ d.menuBg }};color:#5B6B4E;cursor:pointer;font-size:17px;font-weight:800;font-family:inherit;flex:0 0 auto;display:flex;align-items:center;justify-content:center;line-height:1;">⋯</button>
             </div>
           </div>
           <div style="height:9px;background:#EDF1E7;"><div style="height:100%;width:{{ d.pctW }};background:{{ d.iconColor }};"></div></div>
+          <sc-if value="{{ d.menuOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px 16px;background:#FBFCFA;border-bottom:1px solid #EEF2EA;">
+              <button class="pbtn" onClick="{{ d.onCopyLink }}" title="Copy a link to this milestone to paste in an email" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#3F6193;background:#EEF3FA;border:1px solid #CBD8E8;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">🔗 Copy link</button>
+              <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><button class="pbtn" onClick="{{ d.onDupMs }}" title="Duplicate this milestone" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #D7E2CE;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">⧉ Duplicate</button><button class="pbtn" onClick="{{ d.onMoveMs }}" title="Move this milestone to another phase" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #D7E2CE;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">⇄ Move to phase</button><button class="pbtn" onClick="{{ d.onExportMs }}" title="Export this milestone to a Google Doc" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#3F6193;background:#fff;border:1px solid #D7E2CE;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">⇪ Export to Doc</button></sc-if>
+              <sc-if value="{{ d.canDelete }}" hint-placeholder-val="{{ true }}"><button class="del" onClick="{{ d.onDelete }}" title="Delete this milestone" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#B4452E;background:#FCF1F0;border:1px solid #F3DAD8;border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;">✕ Delete</button></sc-if>
+            </div>
+          </sc-if>
           <sc-if value="{{ d.collapsed }}" hint-placeholder-val="{{ false }}">
             <button class="pbtn" onClick="{{ d.onToggleCollapse }}" style="width:100%;text-align:left;font-family:inherit;font-size:11px;font-weight:700;color:#9AA68C;background:#FBFCFA;border:none;border-top:1px solid #EEF2EA;padding:9px 18px;cursor:pointer;">▸ {{ d.taskSummary }} — tap to expand</button>
           </sc-if>
@@ -571,7 +582,7 @@
           </div>
           <div style="padding:0 18px 4px;display:flex;flex-direction:column;gap:6px;">
             <sc-for list="{{ d.tasks }}" as="t" hint-placeholder-count="3">
-              <div class="rg" data-tk="{{ t.tkDrag }}" style="display:grid;grid-template-columns:{{ t.rowGrid }};border:1px solid {{ t.rowBorder }};border-radius:9px;overflow:hidden;background:#fff;">
+              <div class="rg" data-tk="{{ t.tkDrag }}" data-anchor="{{ t.anchor }}" style="display:grid;grid-template-columns:{{ t.rowGrid }};border:1px solid {{ t.rowBorder }};border-radius:9px;overflow:hidden;background:#fff;">
                 <div style="padding:9px 12px;background:{{ t.bg }};">
                   <div class="tkline" style="display:flex;align-items:center;gap:10px;">
                     <sc-if value="{{ notLocked }}" hint-placeholder-val="{{ true }}"><span data-tkgrip="1" draggable="true" title="Drag to reorder this task" style="cursor:grab;color:#C4CFB6;font-size:13px;line-height:1;flex:0 0 auto;user-select:none;">⠿</span></sc-if>
@@ -580,11 +591,17 @@
                     <sc-if value="{{ t.isDone }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;font-weight:800;letter-spacing:.04em;color:#34672A;background:#E4F0DB;border:1px solid #CBDDBC;border-radius:20px;padding:2px 7px;flex:0 0 auto;white-space:nowrap;">{{ t.doneTag }}</span></sc-if>
                     <sc-if value="{{ teamMode }}" hint-placeholder-val="{{ false }}"><button class="pbtn" onClick="{{ t.onComment }}" title="Comment on this task" style="display:inline-flex;align-items:center;gap:4px;height:26px;border-radius:7px;border:1px solid #CBD8E8;background:#EEF3FA;color:#3F6193;cursor:pointer;font-size:10.5px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 10px;">💬 Comment</button></sc-if>
                     <button class="add" onClick="{{ t.onOpen }}" title="Open this task's workspace" style="display:inline-flex;align-items:center;gap:5px;width:auto;height:26px;border-radius:7px;border:1px solid #CBDDBC;background:#EDF3E6;color:#34672A;cursor:pointer;font-size:10.5px;font-weight:800;font-family:inherit;flex:0 0 auto;padding:0 10px;">Open ⤢</button>
-                    <button class="pbtn" onClick="{{ t.onDup }}" title="Duplicate this task" style="width:24px;height:24px;border-radius:6px;border:1px solid #E2E8DE;background:#fff;color:#5B6B4E;cursor:pointer;font-size:11px;font-family:inherit;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">⧉</button>
-                    <button class="pbtn" onClick="{{ t.onMove }}" title="Move this task to another milestone or phase" style="width:24px;height:24px;border-radius:6px;border:1px solid #E2E8DE;background:#fff;color:#5B6B4E;cursor:pointer;font-size:11px;font-family:inherit;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">⇄</button>
                     <button class="pbtn" onClick="{{ t.onToggleTCol }}" title="{{ t.tcolTitle }}" style="width:24px;height:24px;border-radius:6px;border:1px solid #E2E8DE;background:#fff;color:#7C8C6C;cursor:pointer;font-size:11px;font-weight:800;font-family:inherit;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">{{ t.tcolGlyph }}</button>
-                    <sc-if value="{{ t.canDelete }}" hint-placeholder-val="{{ true }}"><button class="del" onClick="{{ t.onDelete }}" title="Delete task" style="width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:#BCC6B2;cursor:pointer;font-size:12px;font-family:inherit;flex:0 0 auto;">✕</button></sc-if>
+                    <button class="pbtn" onClick="{{ t.onToggleMenu }}" title="More actions — copy link, duplicate, move, delete" style="width:24px;height:24px;border-radius:6px;border:1px solid #E2E8DE;background:{{ t.menuBg }};color:#5B6B4E;cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;flex:0 0 auto;display:flex;align-items:center;justify-content:center;line-height:1;">⋯</button>
                   </div>
+                  <sc-if value="{{ t.menuOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;margin-left:30px;">
+                    <button class="pbtn" onClick="{{ t.onCopyLink }}" title="Copy a link to this task to paste in an email" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#3F6193;background:#EEF3FA;border:1px solid #CBD8E8;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">🔗 Copy link</button>
+                    <button class="pbtn" onClick="{{ t.onDup }}" title="Duplicate this task" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #E2E8DE;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">⧉ Duplicate</button>
+                    <button class="pbtn" onClick="{{ t.onMove }}" title="Move this task to another milestone or phase" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #E2E8DE;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">⇄ Move</button>
+                    <sc-if value="{{ t.canDelete }}" hint-placeholder-val="{{ true }}"><button class="del" onClick="{{ t.onDelete }}" title="Delete this task" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#B4452E;background:#FCF1F0;border:1px solid #F3DAD8;border-radius:6px;padding:4px 9px;cursor:pointer;font-family:inherit;">✕ Delete</button></sc-if>
+                  </div>
+                  </sc-if>
                   <sc-if value="{{ t.texp }}" hint-placeholder-val="{{ true }}">
                   <div style="margin-left:30px;margin-top:7px;display:flex;flex-direction:column;gap:5px;">
                     <sc-for list="{{ t.subs }}" as="s" hint-placeholder-count="0">
@@ -1769,7 +1786,7 @@ class Component extends DCLogic {
     this._phaseTints=['#E5F2EB','#DDF1EF','#EEF4DC','#E5F0E0','#E1F4EA','#E7EDF6','#EFE7F7','#F6EBE1','#E5F2EB','#DDF1EF'];
     // Themed color swatches (accent + matching tint) for custom cards, phases & milestones
     this.CARD_SWATCHES=[{c:'#2E8B57',t:'#E5F2EB'},{c:'#0E8F86',t:'#DDF1EF'},{c:'#6F9E1E',t:'#EEF4DC'},{c:'#1FA15B',t:'#E1F4EA'},{c:'#3F6193',t:'#E7EDF6'},{c:'#8A5CC0',t:'#EFE7F7'},{c:'#C0692E',t:'#F6EBE1'},{c:'#C0392E',t:'#F7E7E5'},{c:'#B08900',t:'#F7F1DC'},{c:'#5B6B4E',t:'#EEF1EA'}];
-    this.state={ view:'dashboard', active:'p1', search:'', board:this.seedBoard(), now:new Date(), wsOpen:false, wsPath:null, toast:'', privateMode:false, history:[], navOpen:false, noteBig:false, noteExp:{}, subExp:{}, msCol:{}, taskCol:{}, tlTick:0, billModal:null, teamMode:false, comments:[], cmModal:null, replyModal:null, settingsModal:null, aiPanel:null, aiChatOpen:false, aiChatMsgs:[], aiChatInput:'', aiChatLoading:false, aiChatMem:'', aiChatMemView:false, aiChatFiles:[], teamChats:[], tcFilter:'all', histOpenDays:{}, tlNoteOpen:{}, cardColorPick:null, cardAddMenu:null, cmShowArchived:false, aiConsentDone:false, aiAgree:false, aiHideConsent:false, aiConsentName:'', msWsOpen:false, msWsPath:null, moveModal:null };
+    this.state={ view:'dashboard', active:'p1', search:'', board:this.seedBoard(), now:new Date(), wsOpen:false, wsPath:null, toast:'', privateMode:false, history:[], navOpen:false, noteBig:false, noteExp:{}, subExp:{}, msCol:{}, taskCol:{}, tlTick:0, billModal:null, teamMode:false, comments:[], cmModal:null, replyModal:null, settingsModal:null, aiPanel:null, aiChatOpen:false, aiChatMsgs:[], aiChatInput:'', aiChatLoading:false, aiChatMem:'', aiChatMemView:false, aiChatFiles:[], teamChats:[], tcFilter:'all', histOpenDays:{}, tlNoteOpen:{}, cardColorPick:null, cardAddMenu:null, cmShowArchived:false, aiConsentDone:false, aiAgree:false, aiHideConsent:false, aiConsentName:'', msWsOpen:false, msWsPath:null, moveModal:null, rowMenu:null };
   }
 
   uid(){ return 'i'+Math.random().toString(36).slice(2,9); }
@@ -1820,8 +1837,12 @@ class Component extends DCLogic {
     const landing = (!locked && h==='dana') ? 'launchpad' : (valid.includes(h)?h:'dashboard');
     const safeLanding = (!priv && (landing==='launchpad'||landing==='braindump')) ? 'dashboard' : landing;
     this.setState({view: safeLanding, privateMode: priv, locked, teamMode});
-    this._onHash=()=>{ if(this.state.locked) return; const hh=(location.hash||'').replace('#','').toLowerCase(); if(privTokens.includes(hh)){ this.setState({privateMode:true}); try{ localStorage.setItem('thrive_private','1'); }catch(e){} } if(valid.includes(hh)) this.setState({view:hh}); };
+    this._onHash=()=>{ const parts=this._hashParts(); if(parts.item){ this.gotoItem(parts.item); return; } if(this.state.locked) return; const hh=parts.token; if(!hh) return; if(privTokens.includes(hh)){ this.setState({privateMode:true}); try{ localStorage.setItem('thrive_private','1'); }catch(e){} } if(this.PHASES.some(p=>p.key===hh)){ this.setState({view:'phase', active:hh}); this.persist({view:'phase', active:hh}); return; } if(valid.includes(hh)) this.setState({view:hh}); };
     window.addEventListener('hashchange', this._onHash);
+    // If the page was opened via a shared deep-link, jump to that item / phase after first paint
+    const _hp=this._hashParts();
+    if(_hp.item){ setTimeout(()=>this.gotoItem(_hp.item), 380); }
+    else if(_hp.token && !valid.includes(_hp.token) && this.PHASES.some(p=>p.key===_hp.token)){ this.setState({view:'phase', active:_hp.token}); }
     this._clock=setInterval(()=>this.setState({now:new Date()}),15000);
     this.cloudInit();
     this.tlInit();
@@ -2245,6 +2266,20 @@ class Component extends DCLogic {
     this.setState({board}); this.persist({board}); this.scheduleCloudPush();
   }
   manualCheckpoint(){ const history=[{ts:Date.now(), board:JSON.parse(JSON.stringify(this.state.board)), manual:true}].concat(this.state.history||[]).slice(0,40); this._lastSnap=Date.now(); this.saveHistory(history); this.toast('Checkpoint saved'); }
+  // ===== Row overflow menu (⋯) — consolidates milestone/task actions =====
+  toggleRowMenu(id){ const cur=this.state.rowMenu; this.setState({rowMenu:(cur===id?null:id)}); }
+  // ===== Deep links — copy a URL that jumps to a milestone / task / page =====
+  _linkBase(){ try{ return location.origin+location.pathname; }catch(e){ return ''; } }
+  itemLink(id){ return this._linkBase()+'#item='+encodeURIComponent(id); }
+  pageLink(token){ return this._linkBase()+'#'+encodeURIComponent(token); }
+  _copyText(text){ const ok=()=>this.toast('Link copied — paste it into your email'); try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok,()=>this._copyFallback(text,ok)); return; } }catch(e){} this._copyFallback(text,ok); }
+  _copyFallback(text,ok){ try{ const ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(e){ this.toast('Copy this link: '+text); } }
+  copyItemLink(id){ this.setState({rowMenu:null}); this._copyText(this.itemLink(id)); }
+  copyCurrentPageLink(){ const v=this.state.view; const token=(v==='phase')?(this.state.active||'p1'):v; this._copyText(this.pageLink(token)); }
+  _findItem(id){ const b=this.state.board||{}; const phases=this.PHASES; for(let pi=0;pi<phases.length;pi++){ const key=phases[pi].key; const arr=b[key]; if(!Array.isArray(arr)) continue; for(let di=0;di<arr.length;di++){ const d=arr[di]; if(!d) continue; if(d.id===id) return {phase:key,di,kind:'milestone'}; const ts=d.tasks||[]; for(let ti=0;ti<ts.length;ti++){ if(ts[ti]&&ts[ti].id===id) return {phase:key,di,ti,kind:'task'}; } } } return null; }
+  gotoItem(id){ const loc=this._findItem(id); if(!loc){ this.toast('That item is no longer on the board'); return false; } this.setState(s=>{ const msCol=Object.assign({},s.msCol), taskCol=Object.assign({},s.taskCol); const b=s.board||{}; const d=(b[loc.phase]||[])[loc.di]; if(d){ msCol[d.id]=false; if(loc.kind==='task'){ const t=(d.tasks||[])[loc.ti]; if(t) taskCol[t.id]=false; } } return {view:'phase', active:loc.phase, navOpen:false, msCol, taskCol}; }); this.persist({view:'phase', active:loc.phase}); setTimeout(()=>this._flashAnchor(id),90); setTimeout(()=>this._flashAnchor(id),340); return true; }
+  _flashAnchor(id){ let el=null; try{ el=document.querySelector('[data-anchor="'+((window.CSS&&CSS.escape)?CSS.escape(id):id)+'"]'); }catch(e){ try{ el=document.querySelector('[data-anchor="'+id+'"]'); }catch(_){} } if(!el) return; try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ try{ el.scrollIntoView(); }catch(_){} } try{ el.classList.remove('anchor-flash'); void el.offsetWidth; el.classList.add('anchor-flash'); }catch(e){} setTimeout(()=>{ try{ el.classList.remove('anchor-flash'); }catch(_){} },2500); }
+  _hashParts(){ const raw=(location.hash||'').replace(/^#/,''); const parts=raw.split(/[&/]/).filter(Boolean); let item=null, token=null; for(let i=0;i<parts.length;i++){ const p=parts[i]; const m=/^item=(.+)$/i.exec(p); if(m){ item=decodeURIComponent(m[1]); } else if(!/^team(=.*)?$/i.test(p)&&!token){ token=p.toLowerCase(); } } return {item, token}; }
   restoreVersion(i){ const h=this.state.history||[]; if(!h[i]) return; const cur={ts:Date.now(), board:JSON.parse(JSON.stringify(this.state.board))}; const history=[cur].concat(h).slice(0,40); const board=JSON.parse(JSON.stringify(h[i].board)); this._lastSnap=Date.now(); this.setState({board}); this.persist({board}); this.saveHistory(history); this.scheduleCloudPush(); this.toast('Restored — your current version was saved first'); }
   toggleHistDay(key){ this.setState(s=>({histOpenDays:Object.assign({},s.histOpenDays,{[key]:!s.histOpenDays[key]})})); }
   // Diff two board snapshots → human-readable list of what changed (for the activity log / time-log help)
@@ -2868,15 +2903,21 @@ class Component extends DCLogic {
         onAddDelLink:()=>this.addDelLink(ph,di),
         onRename:(e)=>this.renameDel(ph,di,e.target.value),
         onRenameDesc:(e)=>this.renameDesc(ph,di,e.target.value),
-        onDelete:()=>this.delCard(ph,di), canDelete:this._canDel(del.id),
+        onDelete:()=>{ this.setState({rowMenu:null}); this.delCard(ph,di); }, canDelete:this._canDel(del.id),
+        anchor:del.id, menuOpen:(this.state.rowMenu===del.id), menuBg:(this.state.rowMenu===del.id?'#EDF3E6':'#fff'),
+        onToggleMenu:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleRowMenu(del.id); },
+        onCopyLink:()=>this.copyItemLink(del.id),
         onAddTask:()=>this.addTask(ph,di),
         onAddDelFile:(e)=>this.addDelFile(ph,di,e),
         onComment:()=>this.openComment({ph, msId:del.id, label:'Milestone '+(di+1)+' · '+del.title}),
-        onOpenMs:()=>this.openMsWS(ph,di), onExportMs:()=>this.exportMilestone(ph,di), onMoveMs:()=>this.openMove('milestone',ph,di), onDupMs:()=>this.dupCard(ph,di),
+        onOpenMs:()=>this.openMsWS(ph,di), onExportMs:()=>{ this.setState({rowMenu:null}); this.exportMilestone(ph,di); }, onMoveMs:()=>{ this.setState({rowMenu:null}); this.openMove('milestone',ph,di); }, onDupMs:()=>{ this.setState({rowMenu:null}); this.dupCard(ph,di); },
         msDrag:(ph+'|'+di), onMsUp:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveMsOrder(ph,di,-1); }, onMsDown:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveMsOrder(ph,di,1); },
         tasks:del.tasks.map((t,ti)=>({
           label:t.label, done:t.done, notes:t.notes, np:ph+'|'+di+'|'+ti,
-          tkDrag:(ph+'|'+di+'|'+ti), onDup:()=>this.dupTask(ph,di,ti), onTkUp:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveTaskOrder(ph,di,ti,-1); }, onTkDown:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveTaskOrder(ph,di,ti,1); },
+          tkDrag:(ph+'|'+di+'|'+ti), onDup:()=>{ this.setState({rowMenu:null}); this.dupTask(ph,di,ti); }, onTkUp:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveTaskOrder(ph,di,ti,-1); }, onTkDown:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.moveTaskOrder(ph,di,ti,1); },
+          anchor:t.id, menuOpen:(this.state.rowMenu===t.id), menuBg:(this.state.rowMenu===t.id?'#EDF3E6':'#fff'),
+          onToggleMenu:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleRowMenu(t.id); },
+          onCopyLink:()=>this.copyItemLink(t.id),
           color:t.done?'#5C6B54':'#334155', strike:'none', isDone:t.done, doneTag:t.done?'✓ Done':'',
           tcol:!!this.state.taskCol[t.id], texp:!this.state.taskCol[t.id], tcolGlyph:this.state.taskCol[t.id]?'▸':'▾', tcolTitle:this.state.taskCol[t.id]?'Expand task':'Minimize task',
           rowGrid:this.state.taskCol[t.id]?'1fr':'minmax(0,1fr) minmax(0,1fr)',
@@ -2889,10 +2930,10 @@ class Component extends DCLogic {
           noteCls:this.state.noteExp[t.id]?'big':'', noteToggleGlyph:this.state.noteExp[t.id]?'⤡':'⤢',
           onToggleNote:()=>this.setState(s=>({noteExp:Object.assign({},s.noteExp,{[t.id]:!s.noteExp[t.id]})})),
           onAddFile:(e)=>this.addTaskFile(ph,di,ti,e),
-          onDelete:()=>this.delTask(ph,di,ti), canDelete:this._canDel(t.id),
+          onDelete:()=>{ this.setState({rowMenu:null}); this.delTask(ph,di,ti); }, canDelete:this._canDel(t.id),
           onAddSub:()=>this.addSub(ph,di,ti),
           onAddLink:()=>{ this.addLink(ph,di,ti); this.openWS(ph,di,ti); },
-          onMove:()=>this.openMove('task',ph,di,ti),
+          onMove:()=>{ this.setState({rowMenu:null}); this.openMove('task',ph,di,ti); },
           links:(t.links||[]).map(l=>({ label:(l.label||'Link'), href:((l.url&&l.url.trim())?l.url:'#'), onClick:((l.url&&l.url.trim())?(()=>{}):(e=>{ e.preventDefault(); this.openWS(ph,di,ti); })) })),
           onOpen:()=>this.openWS(ph,di,ti),
           onComment:()=>this.openComment({ph, msId:del.id, taskId:t.id, label:t.label}),
@@ -3217,7 +3258,7 @@ class Component extends DCLogic {
       brainDumpCount:((meta.brainDump)||[]).length,
       bdEmpty:((meta.brainDump)||[]).length===0, bdHasEntries:((meta.brainDump)||[]).length>0,
       phaseHeading:active.heading||active.label, phaseColor:active.color, phaseIconBg:active.iconBg, phaseGlyph:active.glyph,
-      phaseLabelEdit:active.label, onRenamePhase:(e)=>this.renamePhase(active.key, e.target.value), onDeletePhase:()=>this.delPhase(active.key), onAddPhase:()=>this.addPhase(),
+      phaseLabelEdit:active.label, onRenamePhase:(e)=>this.renamePhase(active.key, e.target.value), onDeletePhase:()=>this.delPhase(active.key), onAddPhase:()=>this.addPhase(), onCopyPageLink:()=>this.copyCurrentPageLink(),
       search:this.state.search, onSearch:(e)=>this.onSearch(e), onAddCard:()=>this.addCard(ph),
       phaseCards:this._cardViews(ph), hasPhaseCards:this.cardsFor(ph).length>0, onAddPhaseCard:()=>this.addUserCard(ph),
       launchCards:this._cardViews('launch'), hasLaunchCards:this.cardsFor('launch').length>0, onAddLaunchCard:()=>this.addUserCard('launch'),
