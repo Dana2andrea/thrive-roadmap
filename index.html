@@ -2076,7 +2076,8 @@ class Component extends DCLogic {
     const url=this.cloudUrl(); if(!url) return;
     const bj=JSON.stringify(this.state.board);
     try{
-      const res=await fetch(url,{method:'PUT', headers:{'content-type':'application/json'}, body:JSON.stringify({board:this.state.board, ts:Date.now(), by:this.DEVICE})});
+      // PATCH (merge) not PUT (replace): keeps the sibling "memos" child from being wiped on every board save
+      const res=await fetch(url,{method:'PATCH', headers:{'content-type':'application/json'}, body:JSON.stringify({board:this.state.board, ts:Date.now(), by:this.DEVICE})});
       if(res.ok){ this._lastSyncedJson=bj; this._dirty=false; }
     }catch(e){}
   }
@@ -2300,7 +2301,7 @@ class Component extends DCLogic {
   _flashAnchor(id){ let el=null; try{ el=document.querySelector('[data-anchor="'+((window.CSS&&CSS.escape)?CSS.escape(id):id)+'"]'); }catch(e){ try{ el=document.querySelector('[data-anchor="'+id+'"]'); }catch(_){} } if(!el) return; try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ try{ el.scrollIntoView(); }catch(_){} } try{ el.classList.remove('anchor-flash'); void el.offsetWidth; el.classList.add('anchor-flash'); }catch(e){} setTimeout(()=>{ try{ el.classList.remove('anchor-flash'); }catch(_){} },2500); }
   _hashParts(){ const raw=(location.hash||'').replace(/^#/,''); const parts=raw.split(/[&/]/).filter(Boolean); let item=null, token=null; for(let i=0;i<parts.length;i++){ const p=parts[i]; const m=/^item=(.+)$/i.exec(p); if(m){ item=decodeURIComponent(m[1]); } else if(!/^team(=.*)?$/i.test(p)&&!token){ token=p.toLowerCase(); } } return {item, token}; }
   // ===== Private voice memos — record in-browser, store in a separate cloud path so they sync across YOUR devices (not the team's board) =====
-  memosBase(){ return (this.SYNC_URL&&this.SYNC_PATH) ? (this.SYNC_URL.replace(/\/+$/,'')+'/'+this.SYNC_PATH+'_memos') : ''; }
+  memosBase(){ return (this.SYNC_URL&&this.SYNC_PATH) ? (this.SYNC_URL.replace(/\/+$/,'')+'/'+this.SYNC_PATH+'/memos') : ''; }
   async memosPull(){ if(this.state.teamMode) return; const base=this.memosBase(); if(!base) return; try{ const res=await fetch(base+'.json',{cache:'no-store'}); if(!res.ok) return; const data=await res.json(); this.memos=(data&&typeof data==='object')?data:{}; this.setState({memoTick:(this.state.memoTick||0)+1}); }catch(e){} }
   _memoList(key){ const o=this.memos&&this.memos[key]; if(!o||typeof o!=='object') return []; return Object.keys(o).map(id=>({id, data:o[id].data, secs:o[id].secs||0, ts:o[id].ts||0})).filter(r=>r.data).sort((a,b)=>a.ts-b.ts); }
   _fmtDur(s){ s=Math.max(0,Math.round(s||0)); const m=Math.floor(s/60), ss=s%60; return m+':'+(ss<10?'0':'')+ss; }
