@@ -643,6 +643,7 @@
                               <div style="display:flex;align-items:center;gap:6px;">
                                 <textarea rows="1" class="edt gtext" value="{{ l.label }}" onInput="{{ l.onLabel }}" placeholder="Label" style="font-size:10.5px;color:#3A4633;border:1px solid #E8EDE4;background:#fff;flex:0 0 35%;"></textarea>
                                 <textarea rows="1" class="edt gtext" value="{{ l.url }}" onInput="{{ l.onUrl }}" placeholder="https://…" style="font-size:10.5px;color:#3A4633;border:1px solid #E8EDE4;background:#fff;flex:1;"></textarea>
+                                <sc-if value="{{ l.hasUrl }}" hint-placeholder-val="{{ false }}"><a href="{{ l.url }}" target="_blank" rel="noopener" title="Open link in a new tab" style="flex:0 0 auto;display:inline-flex;align-items:center;text-decoration:none;font-size:10px;font-weight:800;color:#34672A;background:#EDF3E6;border:1px solid #CBDDBC;border-radius:6px;padding:4px 8px;">Open ↗</a></sc-if>
                                 <button class="del" onClick="{{ l.onDelete }}" title="Delete link" style="width:20px;height:20px;border-radius:5px;border:none;background:transparent;color:#C7CFBE;cursor:pointer;font-size:11px;flex:0 0 auto;">✕</button>
                               </div>
                             </sc-for>
@@ -3125,7 +3126,7 @@ class Component extends DCLogic {
             notes:s.notes||'', onNote:e=>this.setSubNote(ph,di,ti,si,e.target.value),
             files:(s.files||[]).map((n,fi)=>({name:n,onDelete:()=>this.delSubFile(ph,di,ti,si,fi)})),
             onAddFile:e=>this.addSubFile(ph,di,ti,si,e),
-            links:(s.links||[]).map((l,li)=>({label:l.label,url:l.url,onLabel:e=>this.setSubLink(ph,di,ti,si,li,'label',e.target.value),onUrl:e=>this.setSubLink(ph,di,ti,si,li,'url',e.target.value),onDelete:()=>this.delSubLink(ph,di,ti,si,li)})),
+            links:(s.links||[]).map((l,li)=>({label:l.label,url:l.url,hasUrl:!!(l.url&&l.url.trim()),onLabel:e=>this.setSubLink(ph,di,ti,si,li,'label',e.target.value),onUrl:e=>this.setSubLink(ph,di,ti,si,li,'url',e.target.value),onDelete:()=>this.delSubLink(ph,di,ti,si,li)})),
             onAddLink:()=>this.addSubLink(ph,di,ti,si),
           })),
         })),
