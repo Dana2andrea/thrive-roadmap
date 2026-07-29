@@ -2384,9 +2384,11 @@ class Component extends DCLogic {
   toggleRowMenu(id){ const cur=this.state.rowMenu; this.setState({rowMenu:(cur===id?null:id)}); }
   // ===== Deep links — copy a URL that jumps to a milestone / task / page =====
   _linkBase(){ try{ return location.origin+location.pathname; }catch(e){ return ''; } }
-  itemLink(id){ return this._linkBase()+'#item='+encodeURIComponent(id); }
-  pageLink(token){ return this._linkBase()+'#'+encodeURIComponent(token); }
-  _copyText(text){ const ok=()=>this.toast('Link copied — paste it into your email'); try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok,()=>this._copyFallback(text,ok)); return; } }catch(e){} this._copyFallback(text,ok); }
+  // Copy links open the TEAM view (shared, read-only) so they're safe to paste into team emails.
+  // Format keeps everything in the hash so the team detector (team followed by &) fires AND the anchor resolves.
+  itemLink(id){ return this._linkBase()+'#team&item='+encodeURIComponent(id); }
+  pageLink(token){ return this._linkBase()+'#team&'+encodeURIComponent(token); }
+  _copyText(text){ const ok=()=>this.toast('Team-view link copied — paste it into your email'); try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok,()=>this._copyFallback(text,ok)); return; } }catch(e){} this._copyFallback(text,ok); }
   _copyFallback(text,ok){ try{ const ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(e){ this.toast('Copy this link: '+text); } }
   copyItemLink(id){ this.setState({rowMenu:null}); this._copyText(this.itemLink(id)); }
   copyCurrentPageLink(){ const v=this.state.view; const token=(v==='phase')?(this.state.active||'p1'):v; this._copyText(this.pageLink(token)); }
