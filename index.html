@@ -2307,11 +2307,27 @@ class Component extends DCLogic {
     Object.keys(agg).forEach(k=>{ const e=agg[k]; const cur=this.dayLog[k]||{ day:k, dateLabel:e.dateLabel, done:[], notes:[], added:[], removedCount:0, renamedCount:0, count:0, timeRange:'' };
       const before=JSON.stringify(cur); cur.dateLabel=e.dateLabel||cur.dateLabel; this._mergeAggInto(cur, e); if(e.timeRange) cur.timeRange=e.timeRange; cur.ts=Date.now();
       this.dayLog[k]=cur; if(JSON.stringify(cur)!==before) changed=true; });
-    if(changed){ this._dayLogPersistLocal(); this.dayLogPush(); this.setState({memoTick:(this.state.memoTick||0)+1}); } }
+    if(changed){ this._dayLogPersistLocal(); this.dayLogPush(); this.setState({memoTick:(this.state.memoTick||0)+1}); }
+    this._syncTimelogDesc(); }
   async dayLogPull(){ const url=this.dayLogUrl(); if(!url) return; try{ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) return; const data=await res.json(); if(!data||typeof data!=='object') return; if(!this.dayLog) this.dayLog={};
     Object.keys(data).forEach(k=>{ const r=data[k]; if(!r||typeof r!=='object') return; const cur=this.dayLog[k]; if(!cur){ this.dayLog[k]=r; } else { this._mergeAggInto(cur, r); if(r.timeRange&&!cur.timeRange) cur.timeRange=r.timeRange; cur.dateLabel=cur.dateLabel||r.dateLabel; } });
     this._dayLogPersistLocal(); this.setState({memoTick:(this.state.memoTick||0)+1}); }catch(e){} }
   dayLogPush(){ const url=this.dayLogUrl(); if(!url) return; clearTimeout(this._dayLogT); this._dayLogT=setTimeout(async()=>{ try{ await fetch(url,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(this.dayLog||{})}); }catch(e){} }, 1500); }
+  // Plain-sentence version of a day's summary, for the timelog NOTE column
+  _dayDescText(a){ if(!a) return ''; const parts=[]; const dk=this._arr(a.done), nk=this._arr(a.notes), ak=this._arr(a.added);
+    if(dk.length) parts.push('Completed: '+dk.join('; '));
+    if(nk.length) parts.push('Updated notes on: '+nk.join('; '));
+    if(ak.length) parts.push('Added: '+ak.join('; '));
+    if(a.removedCount) parts.push('Removed '+a.removedCount+' item'+(a.removedCount>1?'s':''));
+    if(a.renamedCount) parts.push('Renamed '+a.renamedCount+' item'+(a.renamedCount>1?'s':''));
+    return parts.join('. '); }
+  // Continuously fill the timelog NOTE from the day-log — NO "finalize" click needed.
+  // Only ever touches days with an empty or auto note; a note you've typed (auto flag cleared) is never overwritten.
+  _syncTimelogDesc(){ if(!this.TL) return; if(!this.TL.log) this.TL.log={}; let changed=false;
+    Object.keys(this.dayLog||{}).forEach(dk=>{ const text=this._dayDescText(this.dayLog[dk]); if(!text) return; const cur=this.TL.log[dk];
+      if(cur && cur.desc && !cur.auto) return;   // you wrote this note — leave it alone
+      const L=cur||{billable:0}; if(L.desc!==text || !L.auto){ L.desc=text; L.auto=true; if(!L.ts) L.ts=Date.now(); this.TL.log[dk]=L; changed=true; } });
+    if(changed){ try{ this.tlSave(); }catch(e){} clearTimeout(this._tlAutoT); this._tlAutoT=setTimeout(()=>{ try{ this.tlPush(); }catch(e){} }, 1600); this.setState({tlTick:(this.state.tlTick||0)+1}); } }
   toast(msg){ this.setState({toast:msg}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:''}),2600); }
   openWS(ph,di,ti){ this.setState({wsOpen:true, wsPath:{ph,di,ti}, msWsOpen:false}); }
   openMsWS(ph,di){ this.setState({msWsOpen:true, msWsPath:{ph,di}, wsOpen:false}); }
@@ -2936,7 +2952,7 @@ class Component extends DCLogic {
   tlPause(){ if(!this.TL||!this.TL.running||this.TL.paused) return; this.TL.accumSec=(this.TL.accumSec||0)+Math.round((Date.now()-this.TL.segStart)/1000); this.TL.paused=true; this.TL.segStart=0; this.tlBump(); this.tlSave(); this.tlPush(); this.setState({tlTick:(this.state.tlTick||0)+1}); this.toast('Paused'); }
   tlResume(){ if(!this.TL||!this.TL.running||!this.TL.paused) return; this.TL.paused=false; this.TL.segStart=Date.now(); this.tlBump(); this.tlSave(); this.tlPush(); this.setState({tlTick:(this.state.tlTick||0)+1}); this.toast('Resumed'); }
   tlStop(silent){ if(!this.TL||!this.TL.running) return; const sec=Math.max(0,this.tlElapsed()); const day=this.dayKey(this.TL.startMs||Date.now()); this.TL.active[day]=(this.TL.active[day]||0)+sec; this.TL.running=false; this.TL.paused=false; this.TL.accumSec=0; this.TL.segStart=0; this.tlBump(); this.tlSave(); this.tlPush(); this.setState({tlTick:(this.state.tlTick||0)+1}); if(!silent) this.toast('Task timer stopped · '+this.fmtHM(sec)+' added to today'); }
-  finalizeWorkDay(){ if(!this.TL) return; if(this.TL.running) this.tlStop(true); const today=this.dayKey(Date.now()); const actSec=this.TL.active[today]||0; const pasSec=this.tlPassiveDay(today); const cur=this.TL.log[today]||{}; const desc=(cur.desc&&!cur.auto)?cur.desc:this.tlAutoDesc(); const pH=pasSec/3600; const hours=(cur.billable!=null&&!cur.auto)?String(cur.billable):pH.toFixed(2); this.setState({billModal:{finalize:true, date:today, actSec, pasSec, hours, desc}}); }
+  finalizeWorkDay(){ if(!this.TL) return; if(this.TL.running) this.tlStop(true); const today=this.dayKey(Date.now()); const actSec=this.TL.active[today]||0; const pasSec=this.tlPassiveDay(today); const cur=this.TL.log[today]||{}; const desc=(cur.desc&&!cur.auto)?cur.desc:(this._dayDescText(this.dayLog&&this.dayLog[today])||this.tlAutoDesc()); const pH=pasSec/3600; const hours=(cur.billable!=null&&!cur.auto)?String(cur.billable):pH.toFixed(2); this.setState({billModal:{finalize:true, date:today, actSec, pasSec, hours, desc}}); }
   tlSaveSession(){ const m=this.state.billModal; if(!m) return; const h=parseFloat(m.hours); const billable=isNaN(h)?0:Math.max(0,h); const date=m.date||this.dayKey(Date.now()); this.TL.log[date]={billable, desc:(m.desc||'').trim(), ts:Date.now()}; this.tlBump(); this.tlSave(); this.tlPush(); this.setState({billModal:null}); this.toast('Work day finalized · '+billable.toFixed(2)+'h billable'); }
   tlCancelSession(){ this.setState({billModal:null}); this.toast('Not finalized'); }
   setDayBill(date,v){ if(!this.TL) return; const n=parseFloat(v); const L=this.TL.log[date]||{billable:0,desc:''}; L.billable=isNaN(n)?0:Math.max(0,n); L.ts=Date.now(); delete L.auto; this.TL.log[date]=L; this.tlBump(); this.tlSave(); this.tlPush(); this.setState({tlTick:(this.state.tlTick||0)+1}); }
@@ -3263,7 +3279,7 @@ class Component extends DCLogic {
         let _runToday=0; if(TL.running && this.dayKey(TL.startMs||Date.now())===_tkey) _runToday=this.tlElapsed();
         const allDates=Array.from(new Set(Object.keys(days).concat(Object.keys(active)).concat(Object.keys(log)))).sort().reverse().slice(0,60);
         const dailyRows=allDates.map(d=>{ const act=(active[d]||0)+(d===_tkey?_runToday:0); const pas=Math.max(days[d]||0, act); const L=log[d]||null;
-          const noteVal=(L&&!L.auto?L.desc:'')||''; const noteTrim=String(noteVal).trim(); const nOpen=!!this.state.tlNoteOpen[d];
+          const noteVal=(L?(L.desc||''):'')||''; const noteTrim=String(noteVal).trim(); const nOpen=!!this.state.tlNoteOpen[d];
           const prev=noteTrim.replace(/\s+/g,' '); const preview=prev.slice(0,58)+(prev.length>58?'…':'');
           return { date:d, isToday:d===_tkey, todayTag:(d===_tkey?'Today':''), active:this.fmtHM(act), passive:this.fmtHM(pas),
             billable:(L?Number(L.billable||0):0).toFixed(2), note:noteVal, finalized:!!L, statusTag:(L?(L.auto?'auto':'✓'):''),
