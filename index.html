@@ -1361,7 +1361,8 @@
                 <div style="width:38px;height:38px;border-radius:10px;background:#EDF3E6;color:#45852B;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;">📅</div>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:15px;font-weight:800;color:#1E2A16;">{{ day.dateLabel }}</div>
-                  <div style="font-size:11px;color:#9AA68C;font-weight:600;margin-top:1px;">{{ day.count }} saves · {{ day.timeRange }}</div>
+                  <sc-if value="{{ day.hasRestore }}" hint-placeholder-val="{{ true }}"><div style="font-size:11px;color:#9AA68C;font-weight:600;margin-top:1px;">{{ day.count }} saves · {{ day.timeRange }}</div></sc-if>
+                  <sc-if value="{{ day.archived }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#B0894A;font-weight:700;margin-top:1px;">📌 Saved summary · kept for your timelog</div></sc-if>
                 </div>
               </div>
               <sc-if value="{{ day.hasSummary }}" hint-placeholder-val="{{ true }}">
@@ -1375,7 +1376,9 @@
               <sc-if value="{{ day.summaryEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size:12px;color:#9AA68C;padding:2px 2px 4px;">No tracked content changes this day (layout or minor edits only).</div>
               </sc-if>
+              <sc-if value="{{ day.hasRestore }}" hint-placeholder-val="{{ true }}">
               <button class="pbtn" onClick="{{ day.onToggle }}" style="margin-top:10px;font-size:11.5px;font-weight:800;color:#5B6B4E;background:#fff;border:1px solid #E2E8DE;border-radius:8px;padding:7px 12px;cursor:pointer;">{{ day.toggleLabel }}</button>
+              </sc-if>
               <sc-if value="{{ day.open }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:11px;display:flex;flex-direction:column;gap:8px;border-top:1px solid #EEF2EA;padding-top:11px;">
                   <sc-for list="{{ day.items }}" as="h" hint-placeholder-count="0">
@@ -1805,6 +1808,7 @@ class Component extends DCLogic {
     this.CARD_SWATCHES=[{c:'#2E8B57',t:'#E5F2EB'},{c:'#0E8F86',t:'#DDF1EF'},{c:'#6F9E1E',t:'#EEF4DC'},{c:'#1FA15B',t:'#E1F4EA'},{c:'#3F6193',t:'#E7EDF6'},{c:'#8A5CC0',t:'#EFE7F7'},{c:'#C0692E',t:'#F6EBE1'},{c:'#C0392E',t:'#F7E7E5'},{c:'#B08900',t:'#F7F1DC'},{c:'#5B6B4E',t:'#EEF1EA'}];
     this.state={ view:'dashboard', active:'p1', search:'', board:this.seedBoard(), now:new Date(), wsOpen:false, wsPath:null, toast:'', privateMode:false, history:[], navOpen:false, noteBig:false, noteExp:{}, subExp:{}, msCol:{}, taskCol:{}, tlTick:0, billModal:null, teamMode:false, comments:[], cmModal:null, replyModal:null, settingsModal:null, aiPanel:null, aiChatOpen:false, aiChatMsgs:[], aiChatInput:'', aiChatLoading:false, aiChatMem:'', aiChatMemView:false, aiChatFiles:[], teamChats:[], tcFilter:'all', histOpenDays:{}, tlNoteOpen:{}, cardColorPick:null, cardAddMenu:null, cmShowArchived:false, aiConsentDone:false, aiAgree:false, aiHideConsent:false, aiConsentName:'', msWsOpen:false, msWsPath:null, moveModal:null, rowMenu:null, memoTick:0, recActive:false, recKey:null, recSecs:0 };
     this.memos={};
+    this.dayLog={};
   }
 
   uid(){ return 'i'+Math.random().toString(36).slice(2,9); }
@@ -1841,7 +1845,9 @@ class Component extends DCLogic {
   componentDidMount(){
     try{ const s=JSON.parse(localStorage.getItem(this.KEY)||'null'); if(s&&s.board){ this.setState({board:this.normalizeBoard(s.board), active:s.active||'p1'}); } }catch(e){}
     try{ const hh=JSON.parse(localStorage.getItem(this.HKEY)||'null'); if(Array.isArray(hh)){ this.setState({history:hh}); } }catch(e){}
+    try{ const dl=JSON.parse(localStorage.getItem('thrive_daylog_v1')||'null'); if(dl&&typeof dl==='object'){ this.dayLog=dl; } }catch(e){}
     this.histPull();
+    this.dayLogPull().then(()=>this.dayLogSync());
     // Locked-present build: someone shared a present-only copy. No unlocking possible.
     const teamMode = (typeof window!=='undefined' && window.THRIVE_TEAM===true) || /(?:^|[?&#])team(?:[=&/]|$)/i.test((location.search||'')+(location.hash||''));
     const locked = teamMode || !!document.querySelector('meta[name="thrive-lock"]');
@@ -2255,9 +2261,57 @@ class Component extends DCLogic {
   // ---- Version history: synced across devices via Firebase (merge by snapshot ts) ----
   histUrl(){ return this.SYNC_URL ? (this.SYNC_URL.replace(/\/+$/,'')+'/thrivehist/'+this.CTOKEN+'.json') : ''; }
   histMerge(a,b){ const map={}; (a||[]).concat(b||[]).forEach(h=>{ if(h&&typeof h.ts==='number'){ const k=h.ts+(h.manual?'m':''); if(!map[k]) map[k]=h; } }); return Object.keys(map).map(k=>map[k]).sort((x,y)=>(y.ts||0)-(x.ts||0)).slice(0,40); }
-  saveHistory(history){ this.persistHistory(history); this.setState({history}); this.histPush(); }
-  histPush(){ const url=this.histUrl(); if(!url) return; clearTimeout(this._histT); this._histT=setTimeout(async()=>{ try{ await fetch(url,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({items:this.state.history||[]})}); }catch(e){} }, 1200); }
-  async histPull(){ const url=this.histUrl(); if(!url) return; try{ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) return; const data=await res.json(); const remote=(data&&Array.isArray(data.items))?data.items:[]; if(!remote.length) return; const merged=this.histMerge(this.state.history, remote); if(JSON.stringify(merged)!==JSON.stringify(this.state.history)){ this.persistHistory(merged); this.setState({history:merged}); } }catch(e){} }
+  saveHistory(history){ this.persistHistory(history); this.setState({history}); this.histPush(); this.dayLogSync(); }
+  // Merge-before-write: never let one device overwrite the shared history with a shorter list
+  histPush(){ const url=this.histUrl(); if(!url) return; clearTimeout(this._histT); this._histT=setTimeout(async()=>{ try{
+    let remote=[]; try{ const r=await fetch(url,{cache:'no-store'}); if(r.ok){ const d=await r.json(); if(d&&Array.isArray(d.items)) remote=d.items; } }catch(e){}
+    const merged=this.histMerge(this.state.history, remote);
+    if(JSON.stringify(merged)!==JSON.stringify(this.state.history)){ this.persistHistory(merged); this.setState({history:merged}); }
+    await fetch(url,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({items:merged})});
+  }catch(e){} }, 1200); }
+  async histPull(){ const url=this.histUrl(); if(!url) return; try{ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) return; const data=await res.json(); const remote=(data&&Array.isArray(data.items))?data.items:[]; if(!remote.length) return; const merged=this.histMerge(this.state.history, remote); if(JSON.stringify(merged)!==JSON.stringify(this.state.history)){ this.persistHistory(merged); this.setState({history:merged}); } this.dayLogSync(); }catch(e){} }
+  // ===== Durable Work Log — permanent, uncapped per-day summaries so your timelog notes never roll off =====
+  dayLogUrl(){ return (this.SYNC_URL&&this.SYNC_PATH) ? (this.SYNC_URL.replace(/\/+$/,'')+'/'+this.SYNC_PATH+'/daylog.json') : ''; }
+  _dayLogPersistLocal(){ try{ localStorage.setItem('thrive_daylog_v1', JSON.stringify(this.dayLog||{})); }catch(e){} }
+  _arr(v){ return Array.isArray(v)?v:(v&&typeof v==='object'?Object.keys(v).map(k=>v[k]):[]); }
+  // Union-merge day aggregates. Labels are stored as ARRAY VALUES (not object keys) because
+  // Firebase forbids keys containing . $ # [ ] / — which task titles routinely contain.
+  _mergeAggInto(dst, src){ if(!src) return dst; ['done','notes','added'].forEach(f=>{ const set={}; this._arr(dst[f]).forEach(x=>{ if(x!=null) set[String(x)]=1; }); this._arr(src[f]).forEach(x=>{ if(x!=null) set[String(x)]=1; }); dst[f]=Object.keys(set); }); dst.removedCount=Math.max(dst.removedCount||0, +src.removedCount||0); dst.renamedCount=Math.max(dst.renamedCount||0, +src.renamedCount||0); dst.count=Math.max(dst.count||0, +src.count||0); return dst; }
+  _dayLogLines(a){ if(!a) return []; const lines=[]; const dk=this._arr(a.done), nk=this._arr(a.notes), ak=this._arr(a.added);
+    if(dk.length) lines.push({icon:'✓', text:'Completed '+dk.length+' task'+(dk.length>1?'s':'')+': '+dk.join(', ')});
+    if(nk.length) lines.push({icon:'✎', text:'Updated notes on: '+nk.join(', ')});
+    if(ak.length) lines.push({icon:'＋', text:'Added '+ak.length+' item'+(ak.length>1?'s':'')+': '+ak.slice(0,12).join(', ')});
+    if(a.removedCount) lines.push({icon:'✕', text:'Removed '+a.removedCount+' item'+(a.removedCount>1?'s':'')});
+    if(a.renamedCount) lines.push({icon:'✎', text:'Renamed '+a.renamedCount+' item'+(a.renamedCount>1?'s':'')});
+    return lines; }
+  // Aggregate the current (capped) history into per-day sets + restore-point items
+  _histAggByDay(){ const H=this.state.history||[]; const byDay={};
+    const timeFmt=(ts)=>new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    const dayFmt=(ts)=>new Date(ts).toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
+    H.forEach((h,i)=>{ const after=(i===0?this.state.board:H[i-1].board); const changes=this._boardDiff(h.board, after); const key=this.dayKey(h.ts);
+      let e=byDay[key]; if(!e){ e=byDay[key]={ day:key, dateLabel:dayFmt(h.ts), done:{}, notes:{}, added:{}, removedCount:0, renamedCount:0, tMin:h.ts, tMax:h.ts, count:0, items:[] }; }
+      e.count++; e.tMin=Math.min(e.tMin,h.ts); e.tMax=Math.max(e.tMax,h.ts);
+      changes.forEach(c=>{ const L=this._diffLabel(c);
+        if(c.type==='done') e.done[L]=1;
+        else if(c.type==='noteTask'||c.type==='noteMs') e.notes[L]=1;
+        else if(c.type==='addTask'||c.type==='addMs'||c.type==='addPhase') e.added[L]=1;
+        else if(c.type==='delTask'||c.type==='delMs'||c.type==='delPhase') e.removedCount++;
+        else if(c.type==='renameTask'||c.type==='renameMs'||c.type==='renamePhase') e.renamedCount++;
+      });
+      e.items.push({ when:timeFmt(h.ts), manual:!!h.manual, hasChanges:changes.length>0, changeLines:(changes.length?changes.slice(0,10).map(c=>this._diffLine(c)):['· Minor edit']), onRestore:()=>this.restoreVersion(i) });
+    });
+    Object.keys(byDay).forEach(k=>{ const e=byDay[k]; e.timeRange=(timeFmt(e.tMin)===timeFmt(e.tMax))?timeFmt(e.tMax):(timeFmt(e.tMin)+' – '+timeFmt(e.tMax)); e.done=Object.keys(e.done); e.notes=Object.keys(e.notes); e.added=Object.keys(e.added); });
+    return byDay; }
+  // Fold today's/recent history into the permanent log (union — never shrinks), persist + push
+  dayLogSync(){ if(!this.dayLog||typeof this.dayLog!=='object') this.dayLog={}; const agg=this._histAggByDay(); let changed=false;
+    Object.keys(agg).forEach(k=>{ const e=agg[k]; const cur=this.dayLog[k]||{ day:k, dateLabel:e.dateLabel, done:[], notes:[], added:[], removedCount:0, renamedCount:0, count:0, timeRange:'' };
+      const before=JSON.stringify(cur); cur.dateLabel=e.dateLabel||cur.dateLabel; this._mergeAggInto(cur, e); if(e.timeRange) cur.timeRange=e.timeRange; cur.ts=Date.now();
+      this.dayLog[k]=cur; if(JSON.stringify(cur)!==before) changed=true; });
+    if(changed){ this._dayLogPersistLocal(); this.dayLogPush(); this.setState({memoTick:(this.state.memoTick||0)+1}); } }
+  async dayLogPull(){ const url=this.dayLogUrl(); if(!url) return; try{ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) return; const data=await res.json(); if(!data||typeof data!=='object') return; if(!this.dayLog) this.dayLog={};
+    Object.keys(data).forEach(k=>{ const r=data[k]; if(!r||typeof r!=='object') return; const cur=this.dayLog[k]; if(!cur){ this.dayLog[k]=r; } else { this._mergeAggInto(cur, r); if(r.timeRange&&!cur.timeRange) cur.timeRange=r.timeRange; cur.dateLabel=cur.dateLabel||r.dateLabel; } });
+    this._dayLogPersistLocal(); this.setState({memoTick:(this.state.memoTick||0)+1}); }catch(e){} }
+  dayLogPush(){ const url=this.dayLogUrl(); if(!url) return; clearTimeout(this._dayLogT); this._dayLogT=setTimeout(async()=>{ try{ await fetch(url,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(this.dayLog||{})}); }catch(e){} }, 1500); }
   toast(msg){ this.setState({toast:msg}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:''}),2600); }
   openWS(ph,di,ti){ this.setState({wsOpen:true, wsPath:{ph,di,ti}, msWsOpen:false}); }
   openMsWS(ph,di){ this.setState({msWsOpen:true, msWsPath:{ph,di}, wsOpen:false}); }
@@ -3292,7 +3346,7 @@ class Component extends DCLogic {
           }; }),
         }; })(),
       historyCount:(this.state.history||[]).length,
-      hasHistory:(this.state.history||[]).length>0, historyEmpty:(this.state.history||[]).length===0,
+      hasHistory:((this.state.history||[]).length>0)||(Object.keys(this.dayLog||{}).length>0), historyEmpty:((this.state.history||[]).length===0)&&(Object.keys(this.dayLog||{}).length===0),
       onCheckpoint:()=>this.manualCheckpoint(),
       historyItems:(this.state.history||[]).map((h,i)=>({
         when:new Date(h.ts).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),
@@ -3300,39 +3354,28 @@ class Component extends DCLogic {
         manual:!!h.manual, kindLabel:h.manual?'Checkpoint':'Auto-saved',
         onRestore:()=>this.restoreVersion(i),
       })),
-      historyDays:(()=>{ const H=this.state.history||[]; if(!H.length) return [];
-        const timeFmt=(ts)=>new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-        const dayFmt=(ts)=>new Date(ts).toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
-        // compute per-entry diff (before=this snapshot, after=newer snapshot or current board)
-        const entries=H.map((h,i)=>{ const after=(i===0?this.state.board:H[i-1].board); const changes=this._boardDiff(h.board, after); return { i, ts:h.ts, manual:!!h.manual, changes }; });
-        // group by day (newest first)
-        const order=[]; const byDay={};
-        entries.forEach(e=>{ const key=this.dayKey(e.ts); if(!byDay[key]){ byDay[key]=[]; order.push(key); } byDay[key].push(e); });
-        return order.map(key=>{ const list=byDay[key]; const open=!!this.state.histOpenDays[key];
-          const tsList=list.map(e=>e.ts); const tMax=Math.max.apply(null,tsList), tMin=Math.min.apply(null,tsList);
-          // aggregate the day's activity into a de-duplicated summary
-          const done={}, notes={}, added=[], removed=[], renamed=[], other={};
-          list.forEach(e=>e.changes.forEach(c=>{ const L=this._diffLabel(c);
-            if(c.type==='done') done[L]=1;
-            else if(c.type==='noteTask'||c.type==='noteMs') notes[L]=1;
-            else if(c.type==='addTask'||c.type==='addMs'||c.type==='addPhase') added.push(L);
-            else if(c.type==='delTask'||c.type==='delMs'||c.type==='delPhase') removed.push(L);
-            else if(c.type==='renameTask'||c.type==='renameMs'||c.type==='renamePhase') renamed.push(L);
-            else other[c.type]=1;
-          }));
-          const summaryLines=[]; const dk=Object.keys(done), nk=Object.keys(notes);
-          if(dk.length) summaryLines.push({icon:'✓', text:'Completed '+dk.length+' task'+(dk.length>1?'s':'')+': '+dk.join(', ')});
-          if(nk.length) summaryLines.push({icon:'✎', text:'Updated notes on: '+nk.join(', ')});
-          if(added.length) summaryLines.push({icon:'＋', text:'Added '+added.length+' item'+(added.length>1?'s':'')+': '+added.slice(0,8).join(', ')});
-          if(removed.length) summaryLines.push({icon:'✕', text:'Removed '+removed.length+' item'+(removed.length>1?'s':'')});
-          if(renamed.length) summaryLines.push({icon:'✎', text:'Renamed '+renamed.length+' item'+(renamed.length>1?'s':'')});
-          return { key, dateLabel:dayFmt(tMax), count:list.length,
-            timeRange:(timeFmt(tMin)===timeFmt(tMax))?timeFmt(tMax):(timeFmt(tMin)+' – '+timeFmt(tMax)),
+      historyDays:(()=>{
+        // Live history (last 40 snapshots) gives restore points; the durable day-log keeps
+        // every day's summary permanently, so older days stay readable for your timelog.
+        const hist=this._histAggByDay();            // dayKey -> {sets, items, count, timeRange, dateLabel, tMax}
+        const log=this.dayLog||{};
+        const keys={}; Object.keys(hist).forEach(k=>keys[k]=1); Object.keys(log).forEach(k=>keys[k]=1);
+        const dayTs=(k)=>{ const y=k.split('-'); return new Date(+y[0],(+y[1]-1),+y[2]).getTime(); };
+        const keyList=Object.keys(keys).sort((a,b)=>dayTs(b)-dayTs(a));
+        return keyList.map(key=>{ const he=hist[key], pe=log[key];
+          const merged={done:[],notes:[],added:[],removedCount:0,renamedCount:0};
+          this._mergeAggInto(merged, pe); this._mergeAggInto(merged, he);
+          const summaryLines=this._dayLogLines(merged);
+          const open=!!this.state.histOpenDays[key];
+          const hasRestore=!!(he&&he.items&&he.items.length);
+          const count=he?he.count:((pe&&pe.count)||0);
+          const timeRange=he?he.timeRange:((pe&&pe.timeRange)||'');
+          const dateLabel=he?he.dateLabel:((pe&&pe.dateLabel)||key);
+          return { key, dateLabel, count, timeRange,
             summaryLines, hasSummary:summaryLines.length>0, summaryEmpty:summaryLines.length===0,
-            open, onToggle:()=>this.toggleHistDay(key), toggleLabel:open?'Hide restore points':('Show '+list.length+' restore point'+(list.length>1?'s':'')),
-            items:list.map(e=>({ when:timeFmt(e.ts), manual:e.manual, kindLabel:e.manual?'Checkpoint':'Auto-saved',
-              hasChanges:e.changes.length>0, changeLines:(e.changes.length?e.changes.slice(0,10).map(c=>this._diffLine(c)):['· Minor edit']),
-              onRestore:()=>this.restoreVersion(e.i) })),
+            hasRestore, archived:!hasRestore,
+            open, onToggle:()=>this.toggleHistDay(key), toggleLabel:open?'Hide restore points':('Show '+(he?he.items.length:0)+' restore point'+((he&&he.items.length!==1)?'s':'')),
+            items:(he?he.items:[]),
           };
         });
       })(),
